@@ -36,3 +36,22 @@ section{padding:34px 0}.section-head{display:flex;align-items:end;justify-conten
 .site-footer{padding:32px 0 60px;color:#77838e;font-size:11px}.site-footer .footer-inner{border-top:1px solid #202830;padding-top:20px}
 @media(max-width:900px){.competition-grid{grid-template-columns:1fr}.placeholder-grid{grid-template-columns:1fr}.comp-switch{max-width:58vw}.topbar-actions .home-link{display:none}}
 @media(max-width:560px){.portal-hero,.placeholder-hero{padding-top:38px}.competition-card{min-height:185px;padding:19px}.competition-abbr{font-size:38px}.comp-switch{max-width:70vw}.topbar-inner{gap:8px}.brand>div:last-child{display:none}}
+
+/* Compact PSHC header */
+.pshc-hero-compact{padding:30px 0 12px}
+.pshc-title-line{display:flex;align-items:baseline;justify-content:space-between;gap:22px;flex-wrap:wrap}
+.pshc-hero-compact h1{font-size:clamp(34px,5vw,56px);line-height:1;margin:0;letter-spacing:-.055em;white-space:nowrap}
+.pshc-hero-compact h1 span{color:var(--red2)}
+.pshc-hero-compact p{margin-top:8px;max-width:none;font-size:13px;line-height:1.45;color:#8f9ba7}
+.next-round-inline{font-size:13px;font-weight:800;color:#d8e0e7;border-left:2px solid var(--red2);padding-left:12px;white-space:nowrap}
+.next-round-inline strong{color:#ff8d92;text-transform:uppercase;font-size:10px;letter-spacing:.08em;margin-right:4px}
+.seed-strip-wrap{background:#0d1318;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:13px 15px;margin-bottom:14px}
+.seed-strip-wrap .mini-title{margin-bottom:9px}
+.seed-strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.seed-strip .seed-row{display:block;border:1px solid #222c35;background:#10171d;border-radius:11px;padding:9px;min-width:0}
+.seed-strip .rank{width:22px;height:22px;display:inline-grid;margin-bottom:7px}
+.seed-strip .seed-team{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seed-strip .seed-role{font-size:8px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seed-strip .bye{font-size:8px;margin-top:5px}
+@media(max-width:900px){.seed-strip{grid-template-columns:repeat(3,1fr)}.next-round-inline{white-space:normal}}
+@media(max-width:560px){.pshc-hero-compact{padding:20px 0 8px}.pshc-title-line{gap:8px}.pshc-hero-compact h1{font-size:38px}.next-round-inline{width:100%;font-size:11px}.pshc-hero-compact p{font-size:11px}.seed-strip{grid-template-columns:repeat(2,1fr)}}
