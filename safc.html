@@ -1,14 +1,16 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cork SAFC 2026</title><meta name="description" content="Cork Senior A Football Championship 2026 championship tracker."><link rel="stylesheet" href="assets/css/site.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cork SAFC 2026</title><meta name="description" content="Cork Senior A Football Championship 2026 fixtures, results, standings and knockout projections."><link rel="stylesheet" href="assets/css/site.css"><script defer src="data/safc-2026.js"></script><script defer src="assets/js/championship.js"></script></head>
 <body><header class="topbar"><div class="wrap topbar-inner">
-      <a href="index.html" class="brand" style="text-decoration:none"><div class="mark">CORK</div><div>Club Championships<small>2026 Championship Hub</small></div></a>
-      <div class="topbar-actions"><div class="comp-switch"><a href="pshc.html" class="">PSHC</a><a href="sahc.html" class="">SAHC</a><a href="psfc.html" class="">PSFC</a><a href="safc.html" class="active">SAFC</a></div><a class="home-link" href="index.html">All competitions</a></div>
-    </div></header>
-<main><div class="wrap placeholder-hero">
-  <div class="eyebrow"><span class="dot"></span>Football • 2026 Championship</div>
-  <h1>CORK<br><span style="color:var(--red2)">SAFC</span></h1>
-  <p class="portal-intro">Senior A Football Championship. This competition is wired into the new site structure and ready for its master fixture list, results and competition-specific rules.</p>
-  <article class="placeholder-panel"><div class="kicker">Competition shell</div><h2>Data coming next</h2><p>The page is live now so the URL and navigation never need to change. When the fixture/result data is added, this shell can use the same clean tables, match cards and knockout presentation as the PSHC.</p><span class="coming">Awaiting competition data</span>
-    <div class="placeholder-grid"><div class="placeholder-box"><strong>Fixtures & results</strong><span>Round-by-round match cards will sit here.</span></div><div class="placeholder-box"><strong>Group tables</strong><span>Played, wins, losses, scoring for/against and difference.</span></div><div class="placeholder-box"><strong>Knockout route</strong><span>Quarter-finals, semi-finals, final and any competition quirks.</span></div></div>
-  </article>
-</div></main><footer class="site-footer"><div class="wrap footer-inner">Unofficial Cork SAFC display · 2026</div></footer></body></html>
+<a href="index.html" class="brand" style="text-decoration:none"><div class="mark">CORK</div><div>Club Championships<small>2026 Championship Hub</small></div></a>
+<div class="topbar-actions"><div class="comp-switch"><a href="pshc.html" class="">PSHC</a><a href="sahc.html" class="">SAHC</a><a href="psfc.html" class="">PSFC</a><a href="safc.html" class="active">SAFC</a></div><a class="home-link" href="index.html">All competitions</a></div>
+</div></header>
+<main>
+<div class="wrap hero pshc-hero-compact">
+<div class="pshc-title-line"><h1>CORK <span>SAFC</span></h1><div class="next-round-inline"><strong>Next:</strong> Postponed R2 · Sun 30 Aug · 3:00pm · Clyda Rovers v Éire Óg</div></div>
+<p>2026 Senior A Football Championship · fixtures, results, tables, scoring difference & knockout projection.</p>
+</div>
+<section id="tables"><div class="wrap"><div class="section-head"><div><h2>Group tables</h2><p>Scores converted to total points for For / Against / Difference. Official Cork GAA tie-break rules applied.</p></div><div class="tabs" id="groupTabs"><button class="tab active" data-g="all">All groups</button><button class="tab" data-g="1">Group 1</button><button class="tab" data-g="2">Group 2</button><button class="tab" data-g="3">Group 3</button></div></div><div class="groups" id="groups"></div></div></section>
+<section id="knockout"><div class="wrap"><div class="section-head"><div><h2>Road to the final</h2><p>Live projection using Cork GAA’s official 1–6 ranking, two semi-final byes and automatic 3 v 6 repeat-pairing switch.</p></div></div><div class="seed-strip-wrap"><div class="mini-title"><strong>Live seed picture</strong><span id="seedMeta">live projection</span></div><div class="seed-strip" id="seedList"></div></div><div class="knockout" id="knockoutGrid"></div></div></section>
+</main>
+<footer class="footer"><div class="wrap footer-inner"><div>Unofficial SAFC display · Updated 26 August 2026<br>Results: Wikipedia / Cork GAA · Future dates & format: Cork GAA Master Fixture Plan & Competition Regulations.</div><div><a href="https://en.wikipedia.org/wiki/2026_Cork_Senior_A_Football_Championship" target="_blank" rel="noreferrer">Results source</a> · <a href="https://gaacork.ie/masterfixtureplan/" target="_blank" rel="noreferrer">Master fixture plan</a> · <a href="https://gaacork.ie/competitions-document-2026/" target="_blank" rel="noreferrer">Competition rules</a></div></div></footer>
+</body></html>

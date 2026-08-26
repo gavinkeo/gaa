@@ -1,17 +1,20 @@
 # Cork Club Championships 2026
 
-Static multi-file site for GitHub Pages.
+Static multi-page championship tracker for:
 
-## Pages
-- `index.html` — championship hub
-- `pshc.html` — populated Premier Senior Hurling Championship
-- `sahc.html` — Senior A Hurling placeholder
-- `psfc.html` — Premier Senior Football placeholder
-- `safc.html` — Senior A Football placeholder
+- PSHC — Premier Senior Hurling Championship
+- SAHC — Senior A Hurling Championship
+- PSFC — Premier Senior Football Championship
+- SAFC — Senior A Football Championship
 
-## Shared files
-- `assets/css/site.css` — all styling
-- `assets/js/pshc.js` — PSHC calculations and rendering
-- `data/pshc-2026.js` — PSHC fixture/result data
+## Structure
 
-Upload **all files and folders** to the root of the `corkgaa` repository. GitHub Pages should remain set to `main` / `(root)`.
+- `index.html` — competition hub
+- `pshc.html`, `sahc.html`, `psfc.html`, `safc.html` — competition pages
+- `assets/css/site.css` — shared styling
+- `assets/js/pshc.js` — PSHC-specific projection engine
+- `assets/js/championship.js` — shared SAHC / PSFC / SAFC engine
+- `data/*.js` — competition fixture/result data
+- `.nojekyll` — serve directly as a static GitHub Pages site
+
+Each competition page integrates its group table with Round 1, Round 2 and Round 3 fixtures/results beneath the same group card. Standings, live 1–6 seeds, repeat-pairing quarter-final adjustments and relegation projections are calculated from the data files.
