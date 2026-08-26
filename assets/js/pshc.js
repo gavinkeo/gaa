@@ -9,7 +9,28 @@ function groupTable(g){const rows=Object.fromEntries(groupTeams[g].map(t=>[t,{te
 function liveSeeds(){const tables=[1,2,3].map(groupTable);const winners=tables.map(t=>t[0]).sort(crossCmp), runners=tables.map(t=>t[1]).sort(crossCmp);return [...winners,...runners]}function crossCmp(a,b){return (b.pts-a.pts)||(b.diff-a.diff)||(b.f-a.f)||(b.gf-a.gf)}
 function renderGroups(){const el=document.getElementById('groups');el.innerHTML='';[1,2,3].forEach(g=>{const t=groupTable(g);const card=document.createElement('article');card.className='group-card';card.dataset.group=g;card.innerHTML=`<div class="group-title"><strong>Group ${g}</strong><span>2 of 3 rounds played</span></div><div class="table-wrap"><table><thead><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>F</th><th>A</th><th>+/-</th><th>Pts</th></tr></thead><tbody>${t.map((r,i)=>`<tr><td class="teamcell"><span class="pos ${i<2?'q':i===3?'r':''}">${i+1}</span>${r.team}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.f}</td><td>${r.a}</td><td class="diff ${r.diff>0?'posv':r.diff<0?'negv':''}">${r.diff>0?'+':''}${r.diff}</td><td class="pts">${r.pts}</td></tr>`).join('')}</tbody></table></div>`;el.appendChild(card)})}
 function fmtDate(iso){const d=new Date(iso+'T12:00:00');return {day:d.toLocaleDateString('en-IE',{day:'numeric'}),mon:d.toLocaleDateString('en-IE',{month:'short'}),full:d.toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'})}}
-function renderFixtures(){const el=document.getElementById('fixtureGrid');el.innerHTML='';[...games].sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)).forEach(m=>{const d=fmtDate(m.date),v1=m.status==='result'?scoreVal(m.hs):null,v2=m.status==='result'?scoreVal(m.as):null;const win=m.status==='result'?(v1>v2?m.home:v2>v1?m.away:null):null;const x=document.createElement('article');x.className=`fixture ${m.status}`;x.dataset.status=m.status;x.innerHTML=`<div class="fx-date">${d.mon}<b>${d.day}</b>${m.time}</div><div class="teams"><div class="round">Group ${m.g} · Round ${m.round}</div><div class="matchup">${win===m.home?'★ ':''}${m.home} <span style="color:#596671;font-weight:700">v</span> ${win===m.away?'★ ':''}${m.away}</div><div class="venue">${m.venue}</div></div><div class="score">${m.status==='result'?`${m.hs}<br>${m.as}`:`<span class="tag-live">Scheduled</span>`}<small>${m.status==='result'?'FT':''}</small></div>`;el.appendChild(x)})}
+function renderFixtures(){
+ const el=document.getElementById('fixtureGrid');
+ el.innerHTML='';
+ [1,2,3].forEach(round=>{
+  const matches=games.filter(m=>m.round===round).sort((a,b)=>a.g-b.g||a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  const completed=matches.every(m=>m.status==='result');
+  const dates=[...new Set(matches.map(m=>fmtDate(m.date).full))];
+  const card=document.createElement('article');
+  card.className='round-card';
+  card.innerHTML=`<div class="round-title"><div><strong>Round ${round}</strong><span>${dates.join(' · ')}</span></div><span class="round-status ${completed?'complete':'upcoming'}">${completed?'Complete':'Upcoming'}</span></div><div class="round-match-list">${matches.map(m=>{
+    const h=m.status==='result'?scoreVal(m.hs):null,a=m.status==='result'?scoreVal(m.as):null;
+    const hw=m.status==='result'&&h>a,aw=m.status==='result'&&a>h;
+    return `<div class="round-match ${m.status}">
+      <div class="round-match-meta"><span>Group ${m.g}</span><span>${fmtDate(m.date).full} · ${m.time}</span></div>
+      <div class="round-team-row ${hw?'winner':''}"><span class="round-team-name">${hw?'★ ':''}${m.home}</span><strong>${m.status==='result'?m.hs:'—'}</strong></div>
+      <div class="round-team-row ${aw?'winner':''}"><span class="round-team-name">${aw?'★ ':''}${m.away}</span><strong>${m.status==='result'?m.as:'—'}</strong></div>
+      <div class="round-venue">${m.venue}</div>
+    </div>`;
+  }).join('')}</div>`;
+  el.appendChild(card);
+ });
+}
 function renderSeeds(){const s=liveSeeds(),el=document.getElementById('seedList');el.innerHTML=s.map((r,i)=>`<div class="seed-row"><div class="rank">${i+1}</div><div class="seed-team">${r.team}</div><div class="seed-role">${i<3?'group winner':'runner-up'} · ${r.pts} pts · ${r.diff>=0?'+':''}${r.diff}</div><div class="${i===0?'bye':''}">${i===0?'SF BYE':''}</div></div>`).join('')}
 function teamGroup(team){return Number(Object.keys(groupTeams).find(g=>groupTeams[g].includes(team)))}
 function quarterFinalProjection(s){
@@ -67,4 +88,4 @@ ${ruleBox}
 }
 renderGroups();renderFixtures();renderSeeds();renderKnockout();
 document.querySelectorAll('#groupTabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#groupTabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.group-card').forEach(c=>c.classList.toggle('hide',b.dataset.g!=='all'&&c.dataset.group!==b.dataset.g))});
-document.querySelectorAll('#fixtureTabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#fixtureTabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.fixture').forEach(c=>c.classList.toggle('hide',b.dataset.f!=='all'&&c.dataset.status!==b.dataset.f))});
+

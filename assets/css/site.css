@@ -55,3 +55,26 @@ section{padding:34px 0}.section-head{display:flex;align-items:end;justify-conten
 .seed-strip .bye{font-size:8px;margin-top:5px}
 @media(max-width:900px){.seed-strip{grid-template-columns:repeat(3,1fr)}.next-round-inline{white-space:normal}}
 @media(max-width:560px){.pshc-hero-compact{padding:20px 0 8px}.pshc-title-line{gap:8px}.pshc-hero-compact h1{font-size:38px}.next-round-inline{width:100%;font-size:11px}.pshc-hero-compact p{font-size:11px}.seed-strip{grid-template-columns:repeat(2,1fr)}}
+
+/* Round-by-round fixture/results display */
+.rounds-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+.round-card{overflow:hidden;border-radius:18px;background:#0e141a;border:1px solid rgba(255,255,255,.08)}
+.round-title{min-height:62px;padding:14px 16px;background:linear-gradient(90deg,rgba(215,25,32,.18),transparent);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.round-title>div{min-width:0}.round-title strong{display:block;font-size:15px}.round-title span:not(.round-status){display:block;margin-top:3px;font-size:9px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.round-status{flex:0 0 auto;border-radius:999px;padding:5px 7px;font-size:8px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line)}
+.round-status.complete{color:#74e8ad;border-color:rgba(57,217,138,.28);background:rgba(57,217,138,.08)}
+.round-status.upcoming{color:#ffd27c;border-color:rgba(255,191,71,.28);background:rgba(255,191,71,.08)}
+.round-match{padding:12px 14px;border-top:1px solid #1c252d}
+.round-match:first-child{border-top:0}
+.round-match-meta{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;color:#7e8b96;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.round-match-meta span:last-child{text-align:right}
+.round-team-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:27px;font-size:12px}
+.round-team-row+.round-team-row{border-top:1px solid rgba(255,255,255,.035)}
+.round-team-name{font-weight:800;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.round-team-row strong{flex:0 0 auto;font-size:14px;font-weight:950;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#e8edf2}
+.round-team-row.winner .round-team-name,.round-team-row.winner strong{color:#fff}
+.round-team-row.winner .round-team-name{font-weight:950}
+.round-match.upcoming .round-team-row strong{color:#66737f}
+.round-venue{margin-top:6px;color:#65727d;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:900px){.rounds-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.round-card{border-radius:15px}.round-match{padding:11px 12px}.round-team-row{font-size:12px}.round-team-row strong{font-size:13px}}
