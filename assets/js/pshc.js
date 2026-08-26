@@ -7,30 +7,37 @@ function groupTable(g){const rows=Object.fromEntries(groupTeams[g].map(t=>[t,{te
  return arr.sort((a,b)=>{if(b.pts!==a.pts)return b.pts-a.pts;const tied=byPts[a.pts];if(tied.length===2){const m=games.find(x=>x.g===g&&x.status==='result'&&((x.home===a.team&&x.away===b.team)||(x.home===b.team&&x.away===a.team)));if(m){const hv=scoreVal(m.hs),av=scoreVal(m.as);if(hv!==av){const winner=hv>av?m.home:m.away;return winner===a.team?-1:1}}}return (b.diff-a.diff)||(b.f-a.f)||(b.gf-a.gf)||a.team.localeCompare(b.team)});
 }
 function liveSeeds(){const tables=[1,2,3].map(groupTable);const winners=tables.map(t=>t[0]).sort(crossCmp), runners=tables.map(t=>t[1]).sort(crossCmp);return [...winners,...runners]}function crossCmp(a,b){return (b.pts-a.pts)||(b.diff-a.diff)||(b.f-a.f)||(b.gf-a.gf)}
-function renderGroups(){const el=document.getElementById('groups');el.innerHTML='';[1,2,3].forEach(g=>{const t=groupTable(g);const card=document.createElement('article');card.className='group-card';card.dataset.group=g;card.innerHTML=`<div class="group-title"><strong>Group ${g}</strong><span>2 of 3 rounds played</span></div><div class="table-wrap"><table><thead><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>F</th><th>A</th><th>+/-</th><th>Pts</th></tr></thead><tbody>${t.map((r,i)=>`<tr><td class="teamcell"><span class="pos ${i<2?'q':i===3?'r':''}">${i+1}</span>${r.team}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.f}</td><td>${r.a}</td><td class="diff ${r.diff>0?'posv':r.diff<0?'negv':''}">${r.diff>0?'+':''}${r.diff}</td><td class="pts">${r.pts}</td></tr>`).join('')}</tbody></table></div>`;el.appendChild(card)})}
-function fmtDate(iso){const d=new Date(iso+'T12:00:00');return {day:d.toLocaleDateString('en-IE',{day:'numeric'}),mon:d.toLocaleDateString('en-IE',{month:'short'}),full:d.toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'})}}
-function renderFixtures(){
- const el=document.getElementById('fixtureGrid');
- el.innerHTML='';
- [1,2,3].forEach(round=>{
-  const matches=games.filter(m=>m.round===round).sort((a,b)=>a.g-b.g||a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
-  const completed=matches.every(m=>m.status==='result');
-  const dates=[...new Set(matches.map(m=>fmtDate(m.date).full))];
+function renderGroups(){
+ const el=document.getElementById('groups');el.innerHTML='';
+ [1,2,3].forEach(g=>{
+  const t=groupTable(g);
+  const groupGames=games.filter(m=>m.g===g).sort((a,b)=>a.round-b.round||a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  const rounds=[1,2,3].map(round=>{
+   const matches=groupGames.filter(m=>m.round===round);
+   const dateLabel=matches.length?[...new Set(matches.map(m=>fmtDate(m.date).full))].join(' · '):'';
+   const status=matches.every(m=>m.status==='result')?'complete':'upcoming';
+   return `<div class="group-round ${status}">
+    <div class="group-round-head"><strong>Round ${round}</strong><span>${dateLabel}</span></div>
+    ${matches.map(m=>{
+      const h=m.status==='result'?scoreVal(m.hs):null,a=m.status==='result'?scoreVal(m.as):null;
+      const hw=m.status==='result'&&h>a,aw=m.status==='result'&&a>h;
+      return `<div class="group-game">
+       <div class="group-game-meta"><span>${m.time}</span><span>${m.venue}</span></div>
+       <div class="group-game-team ${hw?'winner':''}"><span>${m.home}</span><strong>${m.status==='result'?m.hs:'—'}</strong></div>
+       <div class="group-game-team ${aw?'winner':''}"><span>${m.away}</span><strong>${m.status==='result'?m.as:'—'}</strong></div>
+      </div>`;
+    }).join('')}
+   </div>`;
+  }).join('');
   const card=document.createElement('article');
-  card.className='round-card';
-  card.innerHTML=`<div class="round-title"><div><strong>Round ${round}</strong><span>${dates.join(' · ')}</span></div><span class="round-status ${completed?'complete':'upcoming'}">${completed?'Complete':'Upcoming'}</span></div><div class="round-match-list">${matches.map(m=>{
-    const h=m.status==='result'?scoreVal(m.hs):null,a=m.status==='result'?scoreVal(m.as):null;
-    const hw=m.status==='result'&&h>a,aw=m.status==='result'&&a>h;
-    return `<div class="round-match ${m.status}">
-      <div class="round-match-meta"><span>Group ${m.g}</span><span>${fmtDate(m.date).full} · ${m.time}</span></div>
-      <div class="round-team-row ${hw?'winner':''}"><span class="round-team-name">${hw?'★ ':''}${m.home}</span><strong>${m.status==='result'?m.hs:'—'}</strong></div>
-      <div class="round-team-row ${aw?'winner':''}"><span class="round-team-name">${aw?'★ ':''}${m.away}</span><strong>${m.status==='result'?m.as:'—'}</strong></div>
-      <div class="round-venue">${m.venue}</div>
-    </div>`;
-  }).join('')}</div>`;
+  card.className='group-card';card.dataset.group=g;
+  card.innerHTML=`<div class="group-title"><strong>Group ${g}</strong><span>2 of 3 rounds played</span></div>
+   <div class="table-wrap"><table><thead><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>F</th><th>A</th><th>+/-</th><th>Pts</th></tr></thead><tbody>${t.map((r,i)=>`<tr><td class="teamcell"><span class="pos ${i<2?'q':i===3?'r':''}">${i+1}</span>${r.team}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.f}</td><td>${r.a}</td><td class="diff ${r.diff>0?'posv':r.diff<0?'negv':''}">${r.diff>0?'+':''}${r.diff}</td><td class="pts">${r.pts}</td></tr>`).join('')}</tbody></table></div>
+   <div class="group-schedule"><div class="group-schedule-label">Fixtures &amp; results</div>${rounds}</div>`;
   el.appendChild(card);
  });
 }
+function fmtDate(iso){const d=new Date(iso+'T12:00:00');return {day:d.toLocaleDateString('en-IE',{day:'numeric'}),mon:d.toLocaleDateString('en-IE',{month:'short'}),full:d.toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'})}}
 function renderSeeds(){const s=liveSeeds(),el=document.getElementById('seedList');el.innerHTML=s.map((r,i)=>`<div class="seed-row"><div class="rank">${i+1}</div><div class="seed-team">${r.team}</div><div class="seed-role">${i<3?'group winner':'runner-up'} · ${r.pts} pts · ${r.diff>=0?'+':''}${r.diff}</div><div class="${i===0?'bye':''}">${i===0?'SF BYE':''}</div></div>`).join('')}
 function teamGroup(team){return Number(Object.keys(groupTeams).find(g=>groupTeams[g].includes(team)))}
 function quarterFinalProjection(s){
@@ -86,6 +93,6 @@ ${ruleBox}
 <div class="round-col"><h3>Semi-finals · October</h3><div class="slot"><div class="slot-head"><span>Semi-final 1</span><span>1 v QF B</span></div><div class="slot-team">#1 ${s[0].team}</div><div class="slot-team">Winner QF B</div><div class="slot-note">Default bracket. If this creates a repeat group pairing, Cork GAA adjusts the semi-final pairings.</div></div><div class="slot"><div class="slot-head"><span>Semi-final 2</span><span>QF A v QF C</span></div><div class="slot-team">Winner QF A</div><div class="slot-team">Winner QF C</div><div class="slot-note">Default bracket only; repeat group pairings are avoided where necessary.</div></div><div class="rule-alert"><div class="rule-kicker">Semi-final rule</div><div class="rule-text">The regulations require repeat group pairings to be avoided, but do not prescribe a fixed numerical swap. These remain provisional until the quarter-finals are complete.</div></div></div>
 <div class="round-col"><h3>County final · October</h3><div class="slot"><div class="slot-head"><span>Seán Óg Murphy Cup</span><span>TBC</span></div><div class="slot-team">Winner Semi-final 1</div><div class="slot-team">Winner Semi-final 2</div><div class="slot-note">Final date and throw-in time to be confirmed.</div></div></div>`
 }
-renderGroups();renderFixtures();renderSeeds();renderKnockout();
+renderGroups();renderSeeds();renderKnockout();
 document.querySelectorAll('#groupTabs .tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('#groupTabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.group-card').forEach(c=>c.classList.toggle('hide',b.dataset.g!=='all'&&c.dataset.group!==b.dataset.g))});
 

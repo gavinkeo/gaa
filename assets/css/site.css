@@ -78,3 +78,22 @@ section{padding:34px 0}.section-head{display:flex;align-items:end;justify-conten
 .round-venue{margin-top:6px;color:#65727d;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:900px){.rounds-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.round-card{border-radius:15px}.round-match{padding:11px 12px}.round-team-row{font-size:12px}.round-team-row strong{font-size:13px}}
+
+/* Fixtures/results integrated into each group card */
+.group-schedule{border-top:1px solid #26313a;background:#0b1116}
+.group-schedule-label{padding:10px 14px 8px;color:#8794a0;font-size:9px;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+.group-round{border-top:1px solid #1b252d;padding:0 13px 11px}
+.group-round-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0 7px}
+.group-round-head strong{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#dce3e9}
+.group-round-head span{font-size:8px;color:#74818c;font-weight:800;text-align:right}
+.group-round.upcoming .group-round-head strong{color:#ffd27c}
+.group-game{padding:7px 0 8px;border-top:1px solid rgba(255,255,255,.045)}
+.group-game:first-of-type{border-top:0}
+.group-game-meta{display:flex;justify-content:space-between;gap:10px;margin-bottom:3px;color:#65727d;font-size:8px}
+.group-game-meta span:last-child{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.group-game-team{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:23px;font-size:11px}
+.group-game-team span{font-weight:800;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.group-game-team strong{font-size:12px;font-weight:950;font-variant-numeric:tabular-nums;color:#dce3e9}
+.group-game-team.winner span,.group-game-team.winner strong{color:#fff}
+.group-round.upcoming .group-game-team strong{color:#61707c}
+@media(max-width:560px){.group-round{padding-left:11px;padding-right:11px}.group-game-team{font-size:11px}.group-game-team strong{font-size:12px}}
