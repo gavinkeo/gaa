@@ -1,20 +1,27 @@
 # Cork Club Championships 2026
 
-Static multi-page championship tracker for:
+Static GitHub Pages site covering:
 
 - PSHC — Premier Senior Hurling Championship
 - SAHC — Senior A Hurling Championship
 - PSFC — Premier Senior Football Championship
 - SAFC — Senior A Football Championship
 
-## Structure
+## Score calculator
 
-- `index.html` — competition hub
-- `pshc.html`, `sahc.html`, `psfc.html`, `safc.html` — competition pages
-- `assets/css/site.css` — shared styling
-- `assets/js/pshc.js` — PSHC-specific projection engine
-- `assets/js/championship.js` — shared SAHC / PSFC / SAFC engine
-- `data/*.js` — competition fixture/result data
-- `.nojekyll` — serve directly as a static GitHub Pages site
+Unplayed fixtures have Goals / Points score inputs. Enter both teams' scores and press **Update standings** to recalculate:
 
-Each competition page integrates its group table with Round 1, Round 2 and Round 3 fixtures/results beneath the same group card. Standings, live 1–6 seeds, repeat-pairing quarter-final adjustments and relegation projections are calculated from the data files.
+- group tables
+- For / Against / scoring difference
+- live qualifier seeds
+- quarter-final repeat-pairing flips
+- relegation projection
+- knockout projection
+
+Entered scores are stored in the visitor's browser with `localStorage`. They are a local calculator/simulator and do not alter the GitHub repository or publish results for other visitors.
+
+Use **Reset entered scores** to return to the hard-coded published results.
+
+## Updating official results
+
+When a score becomes official for everyone, edit the appropriate file under `data/`, add `hs` and `as`, and change `status` from `upcoming` to `result`.

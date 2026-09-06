@@ -1,19 +1,53 @@
 const cfg = window.CHAMP_DATA;
 const { games, groupTeams } = cfg;
+const STORAGE_KEY = `corkgaa-${cfg.code.toLowerCase()}-2026-entered-scores`;
+
+games.forEach((m,i)=>{
+  m._id = `g${i}`;
+  m._editable = m.status !== 'result';
+});
 
 function scoreVal(s){
   if(!s) return null;
   const [g,p]=s.split('-').map(Number);
+  if(Number.isNaN(g)||Number.isNaN(p)) return null;
   return g*3+p;
 }
 function goals(s){ return s ? Number(s.split('-')[0]) : 0; }
+function scoreParts(s){
+  if(!s) return {g:'',p:''};
+  const [g,p]=s.split('-');
+  return {g:g??'',p:p??''};
+}
 function crossCmp(a,b){ return (b.pts-a.pts)||(b.diff-a.diff)||(b.f-a.f)||(b.gf-a.gf)||a.team.localeCompare(b.team); }
+function currentProjectionNote(){
+  if(!cfg.projectionNote) return '';
+  const incompleteEarlierGame=games.some(m=>m._editable&&m.round<3&&m.status!=='result');
+  return incompleteEarlierGame?cfg.projectionNote:'';
+}
+function manualResultCount(){ return games.filter(m=>m._editable&&m.status==='result').length; }
+
+function loadEnteredScores(){
+  let saved={};
+  try{ saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')||{}; }catch(e){ saved={}; }
+  games.forEach(m=>{
+    if(!m._editable) return;
+    const entry=saved[m._id];
+    if(entry&&entry.hs&&entry.as){
+      m.hs=entry.hs;
+      m.as=entry.as;
+      m.status='result';
+    }
+  });
+}
+loadEnteredScores();
 
 function groupTable(g){
   const rows=Object.fromEntries(groupTeams[g].map(t=>[t,{team:t,p:0,w:0,d:0,l:0,f:0,a:0,gf:0,pts:0,diff:0}]));
   const results=games.filter(x=>x.g===g&&x.status==='result');
   results.forEach(m=>{
     const h=scoreVal(m.hs),a=scoreVal(m.as),rh=rows[m.home],ra=rows[m.away];
+    if(h===null||a===null||!rh||!ra) return;
     rh.p++;ra.p++;rh.f+=h;rh.a+=a;ra.f+=a;ra.a+=h;rh.gf+=goals(m.hs);ra.gf+=goals(m.as);
     if(h>a){rh.w++;ra.l++;}else if(a>h){ra.w++;rh.l++;}else{rh.d++;ra.d++;}
   });
@@ -40,6 +74,15 @@ function teamGroup(team){return Number(Object.keys(groupTeams).find(g=>groupTeam
 function sameGroup(a,b){return teamGroup(a.team)===teamGroup(b.team);}
 function fmtDate(iso){const d=new Date(iso+'T12:00:00');return {full:d.toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'})};}
 
+function scoreEditor(m,side){
+  const parts=scoreParts(side==='h'?m.hs:m.as);
+  return `<span class="score-entry" aria-label="Enter ${side==='h'?'home':'away'} score">
+    <input class="score-input" type="number" min="0" max="20" inputmode="numeric" aria-label="Goals" placeholder="G" data-game="${m._id}" data-side="${side}" data-part="g" value="${parts.g}">
+    <span class="score-dash">-</span>
+    <input class="score-input points" type="number" min="0" max="99" inputmode="numeric" aria-label="Points" placeholder="Pts" data-game="${m._id}" data-side="${side}" data-part="p" value="${parts.p}">
+  </span>`;
+}
+
 function renderGroups(){
   const el=document.getElementById('groups');el.innerHTML='';
   [1,2,3].forEach(g=>{
@@ -52,15 +95,16 @@ function renderGroups(){
       const allDone=matches.length&&matches.every(m=>m.status==='result');
       const mixed=matches.some(m=>m.status==='result')&&matches.some(m=>m.status!=='result');
       const status=allDone?'complete':'upcoming';
-      return `<div class="group-round ${status}">
-        <div class="group-round-head"><strong>Round ${round}</strong><span>${dateLabel}${mixed?' · partial':''}</span></div>
+      const hasEditable=matches.some(m=>m._editable);
+      return `<div class="group-round ${status}${hasEditable?' scoreable':''}">
+        <div class="group-round-head"><strong>Round ${round}${hasEditable?' · enter scores':''}</strong><span>${dateLabel}${mixed?' · partial':''}</span></div>
         ${matches.map(m=>{
           const h=m.status==='result'?scoreVal(m.hs):null,a=m.status==='result'?scoreVal(m.as):null;
           const hw=m.status==='result'&&h>a,aw=m.status==='result'&&a>h;
-          return `<div class="group-game">
+          return `<div class="group-game ${m._editable?'editable-game':''}">
             <div class="group-game-meta"><span>${m.time}</span><span>${m.venue}</span></div>
-            <div class="group-game-team ${hw?'winner':''}"><span>${m.home}</span><strong>${m.status==='result'?m.hs:'—'}</strong></div>
-            <div class="group-game-team ${aw?'winner':''}"><span>${m.away}</span><strong>${m.status==='result'?m.as:'—'}</strong></div>
+            <div class="group-game-team ${hw?'winner':''}"><span>${m.home}</span>${m._editable?scoreEditor(m,'h'):`<strong>${m.status==='result'?m.hs:'—'}</strong>`}</div>
+            <div class="group-game-team ${aw?'winner':''}"><span>${m.away}</span>${m._editable?scoreEditor(m,'a'):`<strong>${m.status==='result'?m.as:'—'}</strong>`}</div>
           </div>`;
         }).join('')}
       </div>`;
@@ -75,56 +119,102 @@ function renderGroups(){
   });
 }
 
+function ensureScoreActions(){
+  let box=document.getElementById('scoreActions');
+  const editable=games.some(m=>m._editable);
+  if(!editable){ if(box) box.remove(); return; }
+  if(!box){
+    box=document.createElement('div');
+    box.id='scoreActions';
+    box.className='score-actions';
+    document.getElementById('groups').insertAdjacentElement('afterend',box);
+  }
+  const manual=manualResultCount();
+  box.innerHTML=`<div class="score-actions-copy"><strong>Score calculator</strong><span>Enter goals and points in the unplayed fixtures above, then recalculate the tables and knockout picture.</span><small id="scoreStatus">${manual?`${manual} entered result${manual===1?'':'s'} currently applied · saved on this device.`:'Scores are only changed when you press Update standings.'}</small></div><div class="score-actions-buttons"><button type="button" class="score-update" id="updateScores">Update standings</button><button type="button" class="score-reset" id="resetScores">Reset entered scores</button></div>`;
+  document.getElementById('updateScores').onclick=submitEnteredScores;
+  document.getElementById('resetScores').onclick=resetEnteredScores;
+}
+
+function setScoreStatus(text,isError=false){
+  const el=document.getElementById('scoreStatus');
+  if(!el) return;
+  el.textContent=text;
+  el.classList.toggle('error',isError);
+}
+
+function submitEnteredScores(){
+  const saved={};
+  let applied=0,incomplete=0;
+  games.filter(m=>m._editable).forEach(m=>{
+    const get=(side,part)=>document.querySelector(`.score-input[data-game="${m._id}"][data-side="${side}"][data-part="${part}"]`);
+    const vals={hg:get('h','g')?.value.trim()??'',hp:get('h','p')?.value.trim()??'',ag:get('a','g')?.value.trim()??'',ap:get('a','p')?.value.trim()??''};
+    const fields=Object.values(vals),any=fields.some(v=>v!==''),all=fields.every(v=>v!=='');
+    if(any&&!all){incomplete++;return;}
+    if(!any){m.hs=undefined;m.as=undefined;m.status='upcoming';return;}
+    const nums=fields.map(Number);
+    if(nums.some(n=>!Number.isInteger(n)||n<0)){incomplete++;return;}
+    m.hs=`${nums[0]}-${String(nums[1]).padStart(2,'0')}`;
+    m.as=`${nums[2]}-${String(nums[3]).padStart(2,'0')}`;
+    m.status='result';
+    saved[m._id]={hs:m.hs,as:m.as};
+    applied++;
+  });
+  if(incomplete){
+    setScoreStatus(`Complete all four score boxes for each match you start entering. ${incomplete} match${incomplete===1?' is':'es are'} incomplete.`,true);
+    return;
+  }
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));}catch(e){}
+  renderAll();
+  setScoreStatus(applied?`Standings updated from ${applied} entered result${applied===1?'':'s'} · saved on this device.`:'No entered scores are currently applied.');
+  document.getElementById('tables')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function resetEnteredScores(){
+  games.filter(m=>m._editable).forEach(m=>{delete m.hs;delete m.as;m.status='upcoming';});
+  try{localStorage.removeItem(STORAGE_KEY);}catch(e){}
+  renderAll();
+  setScoreStatus('Entered scores cleared. Original published results restored.');
+}
+
 function renderSeeds(){
   const s=liveSeeds(),el=document.getElementById('seedList');
   const byeCount=cfg.format==='seniorA'?2:1;
   el.innerHTML=s.map((r,i)=>`<div class="seed-row"><div class="rank">${i+1}</div><div class="seed-team">${r.team}</div><div class="seed-role">${i<3?'group winner':'runner-up'} · ${r.pts} pts · ${r.diff>=0?'+':''}${r.diff}</div><div class="${i<byeCount?'bye':''}">${i<byeCount?'SF BYE':''}</div></div>`).join('');
   const meta=document.getElementById('seedMeta');
-  if(meta)meta.textContent=cfg.projectionNote?'live projection · incomplete group schedule':'live projection';
+  if(meta){
+    const manual=manualResultCount(),note=currentProjectionNote();
+    meta.textContent=manual?`after ${manual} entered result${manual===1?'':'s'}`:(note?'live projection · incomplete group schedule':'live projection');
+  }
 }
 
 function premierProjection(s){
-  const repeatA=sameGroup(s[1],s[4]); // 2 v 5
-  const repeatB=sameGroup(s[2],s[3]); // 3 v 4
+  const repeatA=sameGroup(s[1],s[4]);
+  const repeatB=sameGroup(s[2],s[3]);
   const flipped=repeatA||repeatB;
-  return {
-    flipped,repeatA,repeatB,
-    a:flipped?[s[1],s[3]]:[s[1],s[4]],
-    b:flipped?[s[2],s[4]]:[s[2],s[3]],
-    aNums:flipped?[2,4]:[2,5],bNums:flipped?[3,5]:[3,4],
-    aSeeds:flipped?'2 v 4':'2 v 5',bSeeds:flipped?'3 v 5':'3 v 4'
-  };
+  return {flipped,repeatA,repeatB,a:flipped?[s[1],s[3]]:[s[1],s[4]],b:flipped?[s[2],s[4]]:[s[2],s[3]],aNums:flipped?[2,4]:[2,5],bNums:flipped?[3,5]:[3,4],aSeeds:flipped?'2 v 4':'2 v 5',bSeeds:flipped?'3 v 5':'3 v 4'};
 }
 function seniorAProjection(s){
-  const repeatA=sameGroup(s[2],s[5]); // 3 v 6
+  const repeatA=sameGroup(s[2],s[5]);
   const flipped=repeatA;
-  return {
-    flipped,repeatA,repeatB:false,
-    a:flipped?[s[2],s[4]]:[s[2],s[5]],
-    b:flipped?[s[3],s[5]]:[s[3],s[4]],
-    aNums:flipped?[3,5]:[3,6],bNums:flipped?[4,6]:[4,5],
-    aSeeds:flipped?'3 v 5':'3 v 6',bSeeds:flipped?'4 v 6':'4 v 5'
-  };
+  return {flipped,repeatA,repeatB:false,a:flipped?[s[2],s[4]]:[s[2],s[5]],b:flipped?[s[3],s[5]]:[s[3],s[4]],aNums:flipped?[3,5]:[3,6],bNums:flipped?[4,6]:[4,5],aSeeds:flipped?'3 v 5':'3 v 6',bSeeds:flipped?'4 v 6':'4 v 5'};
 }
 function qfProjection(s){return cfg.format==='seniorA'?seniorAProjection(s):premierProjection(s);}
 
 function flipWatch(s,q){
+  const note=currentProjectionNote();
   if(q.flipped){
     const repeats=[];
     if(cfg.format==='seniorA')repeats.push(`${s[2].team} v ${s[5].team}`);
-    else{
-      if(q.repeatA)repeats.push(`${s[1].team} v ${s[4].team}`);
-      if(q.repeatB)repeats.push(`${s[2].team} v ${s[3].team}`);
-    }
+    else{if(q.repeatA)repeats.push(`${s[1].team} v ${s[4].team}`);if(q.repeatB)repeats.push(`${s[2].team} v ${s[3].team}`);}
     const normal=cfg.format==='seniorA'?'3 v 6 and 4 v 5':'2 v 5 and 3 v 4';
-    return `<div class="rule-alert active"><div class="rule-kicker">Current projection triggers QF flip <span class="rule-pill active">Official rule</span></div><div class="rule-text"><strong>${repeats.join(' and ')}</strong> would repeat a group-stage fixture. Cork’s regulations therefore flip the projected club quarter-finals from ${normal} to <strong>${q.aNums[0]} v ${q.aNums[1]}</strong> and <strong>${q.bNums[0]} v ${q.bNums[1]}</strong>: <strong>${q.a[0].team} v ${q.a[1].team}</strong> and <strong>${q.b[0].team} v ${q.b[1].team}</strong>. <span class="unresolved">These are projections only; remaining group games can change the seed order and remove or create the flip.</span></div>${cfg.projectionNote?`<div class="scenario"><strong>Extra volatility:</strong> ${cfg.projectionNote}</div>`:''}</div>`;
+    return `<div class="rule-alert active"><div class="rule-kicker">Current projection triggers QF flip <span class="rule-pill active">Official rule</span></div><div class="rule-text"><strong>${repeats.join(' and ')}</strong> would repeat a group-stage fixture. Cork’s regulations therefore flip the projected club quarter-finals from ${normal} to <strong>${q.aNums[0]} v ${q.aNums[1]}</strong> and <strong>${q.bNums[0]} v ${q.bNums[1]}</strong>: <strong>${q.a[0].team} v ${q.a[1].team}</strong> and <strong>${q.b[0].team} v ${q.b[1].team}</strong>. <span class="unresolved">These are projections only; remaining group games can change the seed order and remove or create the flip.</span></div>${note?`<div class="scenario"><strong>Extra volatility:</strong> ${note}</div>`:''}</div>`;
   }
   if(cfg.format==='seniorA'){
     const g3=teamGroup(s[2].team),sameRunner=s.find((r,i)=>i>=3&&teamGroup(r.team)===g3);
     const scenario=sameRunner?` If <strong>${sameRunner.team}</strong> ends up #6 while <strong>${s[2].team}</strong> remains #3, that would create a repeat and both QFs would switch to 3 v 5 and 4 v 6.`:'';
-    return `<div class="rule-alert"><div class="rule-kicker">Flip watch <span class="rule-pill">Official rule</span></div><div class="rule-text">No repeat in today’s nominal 3 v 6 projection. If #3 and #6 come from the same group, both QFs switch from 3 v 6 / 4 v 5 to 3 v 5 / 4 v 6.${scenario}</div>${cfg.projectionNote?`<div class="scenario"><strong>Note:</strong> ${cfg.projectionNote}</div>`:''}</div>`;
+    return `<div class="rule-alert"><div class="rule-kicker">Flip watch <span class="rule-pill">Official rule</span></div><div class="rule-text">No repeat in today’s nominal 3 v 6 projection. If #3 and #6 come from the same group, both QFs switch from 3 v 6 / 4 v 5 to 3 v 5 / 4 v 6.${scenario}</div>${note?`<div class="scenario"><strong>Note:</strong> ${note}</div>`:''}</div>`;
   }
-  return `<div class="rule-alert"><div class="rule-kicker">Flip watch <span class="rule-pill">Official rule</span></div><div class="rule-text">No repeat in the current projection. If either nominal 2 v 5 or 3 v 4 is a same-group rematch, <strong>both</strong> club QFs automatically switch to 2 v 4 and 3 v 5.</div>${cfg.projectionNote?`<div class="scenario"><strong>Note:</strong> ${cfg.projectionNote}</div>`:''}</div>`;
+  return `<div class="rule-alert"><div class="rule-kicker">Flip watch <span class="rule-pill">Official rule</span></div><div class="rule-text">No repeat in the current projection. If either nominal 2 v 5 or 3 v 4 is a same-group rematch, <strong>both</strong> club QFs automatically switch to 2 v 4 and 3 v 5.</div>${note?`<div class="scenario"><strong>Note:</strong> ${note}</div>`:''}</div>`;
 }
 
 function relegationProjection(){
@@ -138,9 +228,7 @@ function renderKnockout(){
   const relSecond=rel.boundaryTie?`${bottoms[1].team} / ${bottoms[2].team}`:bottoms[1].team;
   const ruleBox=flipWatch(s,q);
   const qfC=cfg.format==='premier'?`<div class="slot"><div class="slot-head"><span>QF C</span><span>6 v Div/Col</span></div><div class="slot-team">#6 ${s[5].team}</div><div class="slot-team">${cfg.feeder||'Divisions / Colleges winner'}</div><div class="slot-note">${cfg.feederNote||'Divisions / Colleges qualifier enters the championship here.'}</div></div>`:'';
-  const sf1=cfg.format==='seniorA'
-    ? `<div class="slot"><div class="slot-head"><span>Semi-final 1</span><span>1 v QF B</span></div><div class="slot-team">#1 ${s[0].team}</div><div class="slot-team">Winner QF B</div><div class="slot-note">Default bracket; repeat group pairings are adjusted if necessary.</div></div>`
-    : `<div class="slot"><div class="slot-head"><span>Semi-final 1</span><span>1 v QF B</span></div><div class="slot-team">#1 ${s[0].team}</div><div class="slot-team">Winner QF B</div><div class="slot-note">Default bracket; repeat group pairings are adjusted if necessary.</div></div>`;
+  const sf1=`<div class="slot"><div class="slot-head"><span>Semi-final 1</span><span>1 v QF B</span></div><div class="slot-team">#1 ${s[0].team}</div><div class="slot-team">Winner QF B</div><div class="slot-note">Default bracket; repeat group pairings are adjusted if necessary.</div></div>`;
   const sf2=cfg.format==='seniorA'
     ? `<div class="slot"><div class="slot-head"><span>Semi-final 2</span><span>2 v QF A</span></div><div class="slot-team">#2 ${s[1].team}</div><div class="slot-team">Winner QF A</div><div class="slot-note">Default bracket; repeat group pairings are adjusted if necessary.</div></div>`
     : `<div class="slot"><div class="slot-head"><span>Semi-final 2</span><span>QF A v QF C</span></div><div class="slot-team">Winner QF A</div><div class="slot-team">Winner QF C</div><div class="slot-note">Default bracket only; repeat group pairings are avoided where necessary.</div></div>`;
@@ -156,8 +244,11 @@ function renderKnockout(){
     <div class="round-col"><h3>County final · October</h3><div class="slot"><div class="slot-head"><span>${cfg.cup}</span><span>TBC</span></div><div class="slot-team">Winner Semi-final 1</div><div class="slot-team">Winner Semi-final 2</div><div class="slot-note">County final window remains provisional in the Master Fixture Plan.</div></div></div>`;
 }
 
-renderGroups();renderSeeds();renderKnockout();
-document.querySelectorAll('#groupTabs .tab').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('#groupTabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
-  document.querySelectorAll('.group-card').forEach(c=>c.classList.toggle('hide',b.dataset.g!=='all'&&c.dataset.group!==b.dataset.g));
-});
+function bindTabs(){
+  document.querySelectorAll('#groupTabs .tab').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('#groupTabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+    document.querySelectorAll('.group-card').forEach(c=>c.classList.toggle('hide',b.dataset.g!=='all'&&c.dataset.group!==b.dataset.g));
+  });
+}
+function renderAll(){renderGroups();ensureScoreActions();renderSeeds();renderKnockout();bindTabs();}
+renderAll();

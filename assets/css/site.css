@@ -97,3 +97,21 @@ section{padding:34px 0}.section-head{display:flex;align-items:end;justify-conten
 .group-game-team.winner span,.group-game-team.winner strong{color:#fff}
 .group-round.upcoming .group-game-team strong{color:#61707c}
 @media(max-width:560px){.group-round{padding-left:11px;padding-right:11px}.group-game-team{font-size:11px}.group-game-team strong{font-size:12px}}
+
+/* In-browser score entry / final-round calculator */
+.group-round.scoreable{background:linear-gradient(180deg,rgba(255,191,71,.035),transparent)}
+.group-round.scoreable .group-round-head strong{color:#ffd27c}
+.editable-game{padding-top:8px;padding-bottom:9px}
+.score-entry{display:inline-flex;align-items:center;justify-content:flex-end;gap:3px;flex:0 0 auto}
+.score-input{width:34px;height:27px;border:1px solid #34414c;border-radius:7px;background:#111920;color:#fff;text-align:center;font:900 12px/1 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums;outline:none;padding:0 3px;appearance:textfield;-moz-appearance:textfield}
+.score-input::-webkit-outer-spin-button,.score-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.score-input.points{width:38px}
+.score-input:focus{border-color:#ff6c72;box-shadow:0 0 0 2px rgba(255,59,67,.12)}
+.score-dash{font-size:11px;color:#798691;font-weight:900}
+.group-game-team.winner .score-input{border-color:rgba(57,217,138,.38)}
+.score-actions{margin-top:14px;padding:15px 16px;border:1px solid rgba(255,191,71,.24);background:linear-gradient(90deg,rgba(255,191,71,.07),rgba(14,20,26,.96) 45%);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.score-actions-copy{min-width:0}.score-actions-copy strong{display:block;font-size:13px}.score-actions-copy span{display:block;margin-top:4px;color:#99a5b0;font-size:10px;line-height:1.4}.score-actions-copy small{display:block;margin-top:6px;color:#74818c;font-size:9px}.score-actions-copy small.error{color:#ff8e93}
+.score-actions-buttons{display:flex;gap:8px;flex:0 0 auto}
+.score-update,.score-reset{appearance:none;border:0;border-radius:10px;padding:10px 13px;font-size:10px;font-weight:950;cursor:pointer;white-space:nowrap}
+.score-update{background:#fff;color:#0b0f13}.score-update:hover{background:#eef2f5}.score-reset{background:#111920;color:#aeb9c3;border:1px solid #2a3540}.score-reset:hover{color:#fff;border-color:#44515d}
+@media(max-width:700px){.score-actions{align-items:stretch;flex-direction:column}.score-actions-buttons{width:100%}.score-update,.score-reset{flex:1}.score-input{width:32px}.score-input.points{width:36px}}
