@@ -37,3 +37,5 @@ The shared championship engine now switches its wording automatically when all p
 
 - PSHC / SAHC: quarter-finals 18–20 September, semi-finals 4 October, county finals 18 October.
 - PSFC / SAFC: quarter-finals 25–27 September, semi-finals 11 October, county finals 25 October.
+## 6 September update
+PSHC Round 3 results have been published and hard-coded. The PSHC group stage is now complete; final tables, seed order, repeat-match quarter-final adjustment and relegation pairing are calculated from the published results.
