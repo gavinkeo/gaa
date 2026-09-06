@@ -25,3 +25,7 @@ Use **Reset entered scores** to return to the hard-coded published results.
 ## Updating official results
 
 When a score becomes official for everyone, edit the appropriate file under `data/`, add `hs` and `as`, and change `status` from `upcoming` to `result`.
+
+
+## Club colour markers
+Club primary colours are stored once in `assets/js/team-colours.js` and rendered beside team names across tables, fixtures, seedings and knockout projections.

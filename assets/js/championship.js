@@ -74,6 +74,13 @@ function teamGroup(team){return Number(Object.keys(groupTeams).find(g=>groupTeam
 function sameGroup(a,b){return teamGroup(a.team)===teamGroup(b.team);}
 function fmtDate(iso){const d=new Date(iso+'T12:00:00');return {full:d.toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'})};}
 
+function teamLabel(team){
+  const colours=window.CLUB_COLOURS?.[team];
+  if(!colours) return `<span class="team-label"><span class="club-name">${team}</span></span>`;
+  return `<span class="team-label"><span class="club-name">${team}</span><span class="club-colours" aria-hidden="true" title="${colours.label}">${colours.emoji}</span></span>`;
+}
+function pairingLabel(a,b){ return `${teamLabel(a)} <span class="pairing-v">v</span> ${teamLabel(b)}`; }
+
 function scoreEditor(m,side){
   const parts=scoreParts(side==='h'?m.hs:m.as);
   return `<span class="score-entry" aria-label="Enter ${side==='h'?'home':'away'} score">
@@ -103,8 +110,8 @@ function renderGroups(){
           const hw=m.status==='result'&&h>a,aw=m.status==='result'&&a>h;
           return `<div class="group-game ${m._editable?'editable-game':''}">
             <div class="group-game-meta"><span>${m.time}</span><span>${m.venue}</span></div>
-            <div class="group-game-team ${hw?'winner':''}"><span>${m.home}</span>${m._editable?scoreEditor(m,'h'):`<strong>${m.status==='result'?m.hs:'—'}</strong>`}</div>
-            <div class="group-game-team ${aw?'winner':''}"><span>${m.away}</span>${m._editable?scoreEditor(m,'a'):`<strong>${m.status==='result'?m.as:'—'}</strong>`}</div>
+            <div class="group-game-team ${hw?'winner':''}">${teamLabel(m.home)}${m._editable?scoreEditor(m,'h'):`<strong>${m.status==='result'?m.hs:'—'}</strong>`}</div>
+            <div class="group-game-team ${aw?'winner':''}">${teamLabel(m.away)}${m._editable?scoreEditor(m,'a'):`<strong>${m.status==='result'?m.as:'—'}</strong>`}</div>
           </div>`;
         }).join('')}
       </div>`;
@@ -112,7 +119,7 @@ function renderGroups(){
     const card=document.createElement('article');card.className='group-card';card.dataset.group=g;
     card.innerHTML=`<div class="group-title"><strong>Group ${g}</strong><span>${completed} of 6 group games complete</span></div>
       <div class="table-wrap"><table><thead><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>F</th><th>A</th><th>+/-</th><th>Pts</th></tr></thead><tbody>
-      ${t.map((r,i)=>`<tr><td class="teamcell"><span class="pos ${i<2?'q':i===3?'r':''}">${i+1}</span>${r.team}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.f}</td><td>${r.a}</td><td class="diff ${r.diff>0?'posv':r.diff<0?'negv':''}">${r.diff>0?'+':''}${r.diff}</td><td class="pts">${r.pts}</td></tr>`).join('')}
+      ${t.map((r,i)=>`<tr><td class="teamcell"><span class="pos ${i<2?'q':i===3?'r':''}">${i+1}</span>${teamLabel(r.team)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.f}</td><td>${r.a}</td><td class="diff ${r.diff>0?'posv':r.diff<0?'negv':''}">${r.diff>0?'+':''}${r.diff}</td><td class="pts">${r.pts}</td></tr>`).join('')}
       </tbody></table></div>
       <div class="group-schedule"><div class="group-schedule-label">Fixtures &amp; results</div>${rounds}</div>`;
     el.appendChild(card);
@@ -179,7 +186,7 @@ function resetEnteredScores(){
 function renderSeeds(){
   const s=liveSeeds(),el=document.getElementById('seedList');
   const byeCount=cfg.format==='seniorA'?2:1;
-  el.innerHTML=s.map((r,i)=>`<div class="seed-row"><div class="rank">${i+1}</div><div class="seed-team">${r.team}</div><div class="seed-role">${i<3?'group winner':'runner-up'} · ${r.pts} pts · ${r.diff>=0?'+':''}${r.diff}</div><div class="${i<byeCount?'bye':''}">${i<byeCount?'SF BYE':''}</div></div>`).join('');
+  el.innerHTML=s.map((r,i)=>`<div class="seed-row"><div class="rank">${i+1}</div><div class="seed-team">${teamLabel(r.team)}</div><div class="seed-role">${i<3?'group winner':'runner-up'} · ${r.pts} pts · ${r.diff>=0?'+':''}${r.diff}</div><div class="${i<byeCount?'bye':''}">${i<byeCount?'SF BYE':''}</div></div>`).join('');
   const meta=document.getElementById('seedMeta');
   if(meta){
     const manual=manualResultCount(),note=currentProjectionNote();
@@ -204,14 +211,14 @@ function flipWatch(s,q){
   const note=currentProjectionNote();
   if(q.flipped){
     const repeats=[];
-    if(cfg.format==='seniorA')repeats.push(`${s[2].team} v ${s[5].team}`);
-    else{if(q.repeatA)repeats.push(`${s[1].team} v ${s[4].team}`);if(q.repeatB)repeats.push(`${s[2].team} v ${s[3].team}`);}
+    if(cfg.format==='seniorA')repeats.push(pairingLabel(s[2].team,s[5].team));
+    else{if(q.repeatA)repeats.push(pairingLabel(s[1].team,s[4].team));if(q.repeatB)repeats.push(pairingLabel(s[2].team,s[3].team));}
     const normal=cfg.format==='seniorA'?'3 v 6 and 4 v 5':'2 v 5 and 3 v 4';
-    return `<div class="rule-alert active"><div class="rule-kicker">Current projection triggers QF flip <span class="rule-pill active">Official rule</span></div><div class="rule-text"><strong>${repeats.join(' and ')}</strong> would repeat a group-stage fixture. Cork’s regulations therefore flip the projected club quarter-finals from ${normal} to <strong>${q.aNums[0]} v ${q.aNums[1]}</strong> and <strong>${q.bNums[0]} v ${q.bNums[1]}</strong>: <strong>${q.a[0].team} v ${q.a[1].team}</strong> and <strong>${q.b[0].team} v ${q.b[1].team}</strong>. <span class="unresolved">These are projections only; remaining group games can change the seed order and remove or create the flip.</span></div>${note?`<div class="scenario"><strong>Extra volatility:</strong> ${note}</div>`:''}</div>`;
+    return `<div class="rule-alert active"><div class="rule-kicker">Current projection triggers QF flip <span class="rule-pill active">Official rule</span></div><div class="rule-text"><strong>${repeats.join(' and ')}</strong> would repeat a group-stage fixture. Cork’s regulations therefore flip the projected club quarter-finals from ${normal} to <strong>${q.aNums[0]} v ${q.aNums[1]}</strong> and <strong>${q.bNums[0]} v ${q.bNums[1]}</strong>: <strong>${pairingLabel(q.a[0].team,q.a[1].team)}</strong> and <strong>${pairingLabel(q.b[0].team,q.b[1].team)}</strong>. <span class="unresolved">These are projections only; remaining group games can change the seed order and remove or create the flip.</span></div>${note?`<div class="scenario"><strong>Extra volatility:</strong> ${note}</div>`:''}</div>`;
   }
   if(cfg.format==='seniorA'){
     const g3=teamGroup(s[2].team),sameRunner=s.find((r,i)=>i>=3&&teamGroup(r.team)===g3);
-    const scenario=sameRunner?` If <strong>${sameRunner.team}</strong> ends up #6 while <strong>${s[2].team}</strong> remains #3, that would create a repeat and both QFs would switch to 3 v 5 and 4 v 6.`:'';
+    const scenario=sameRunner?` If <strong>${teamLabel(sameRunner.team)}</strong> ends up #6 while <strong>${teamLabel(s[2].team)}</strong> remains #3, that would create a repeat and both QFs would switch to 3 v 5 and 4 v 6.`:'';
     return `<div class="rule-alert"><div class="rule-kicker">Flip watch <span class="rule-pill">Official rule</span></div><div class="rule-text">No repeat in today’s nominal 3 v 6 projection. If #3 and #6 come from the same group, both QFs switch from 3 v 6 / 4 v 5 to 3 v 5 / 4 v 6.${scenario}</div>${note?`<div class="scenario"><strong>Note:</strong> ${note}</div>`:''}</div>`;
   }
   return `<div class="rule-alert"><div class="rule-kicker">Flip watch <span class="rule-pill">Official rule</span></div><div class="rule-text">No repeat in the current projection. If either nominal 2 v 5 or 3 v 4 is a same-group rematch, <strong>both</strong> club QFs automatically switch to 2 v 4 and 3 v 5.</div>${note?`<div class="scenario"><strong>Note:</strong> ${note}</div>`:''}</div>`;
@@ -225,20 +232,20 @@ function relegationProjection(){
 
 function renderKnockout(){
   const s=liveSeeds(),q=qfProjection(s),rel=relegationProjection(),bottoms=rel.bottoms;
-  const relSecond=rel.boundaryTie?`${bottoms[1].team} / ${bottoms[2].team}`:bottoms[1].team;
+  const relSecond=rel.boundaryTie?`${teamLabel(bottoms[1].team)} <span class="pairing-v">/</span> ${teamLabel(bottoms[2].team)}`:teamLabel(bottoms[1].team);
   const ruleBox=flipWatch(s,q);
-  const qfC=cfg.format==='premier'?`<div class="slot"><div class="slot-head"><span>QF C</span><span>6 v Div/Col</span></div><div class="slot-team">#6 ${s[5].team}</div><div class="slot-team">${cfg.feeder||'Divisions / Colleges winner'}</div><div class="slot-note">${cfg.feederNote||'Divisions / Colleges qualifier enters the championship here.'}</div></div>`:'';
-  const sf1=`<div class="slot"><div class="slot-head"><span>Semi-final 1</span><span>1 v QF B</span></div><div class="slot-team">#1 ${s[0].team}</div><div class="slot-team">Winner QF B</div><div class="slot-note">Default bracket; repeat group pairings are adjusted if necessary.</div></div>`;
+  const qfC=cfg.format==='premier'?`<div class="slot"><div class="slot-head"><span>QF C</span><span>6 v Div/Col</span></div><div class="slot-team">#6 ${teamLabel(s[5].team)}</div><div class="slot-team">${cfg.feeder?teamLabel(cfg.feeder):'Divisions / Colleges winner'}</div><div class="slot-note">${cfg.feederNote||'Divisions / Colleges qualifier enters the championship here.'}</div></div>`:'';
+  const sf1=`<div class="slot"><div class="slot-head"><span>Semi-final 1</span><span>1 v QF B</span></div><div class="slot-team">#1 ${teamLabel(s[0].team)}</div><div class="slot-team">Winner QF B</div><div class="slot-note">Default bracket; repeat group pairings are adjusted if necessary.</div></div>`;
   const sf2=cfg.format==='seniorA'
-    ? `<div class="slot"><div class="slot-head"><span>Semi-final 2</span><span>2 v QF A</span></div><div class="slot-team">#2 ${s[1].team}</div><div class="slot-team">Winner QF A</div><div class="slot-note">Default bracket; repeat group pairings are adjusted if necessary.</div></div>`
+    ? `<div class="slot"><div class="slot-head"><span>Semi-final 2</span><span>2 v QF A</span></div><div class="slot-team">#2 ${teamLabel(s[1].team)}</div><div class="slot-team">Winner QF A</div><div class="slot-note">Default bracket; repeat group pairings are adjusted if necessary.</div></div>`
     : `<div class="slot"><div class="slot-head"><span>Semi-final 2</span><span>QF A v QF C</span></div><div class="slot-team">Winner QF A</div><div class="slot-team">Winner QF C</div><div class="slot-note">Default bracket only; repeat group pairings are avoided where necessary.</div></div>`;
 
   document.getElementById('knockoutGrid').innerHTML=`
     <div class="round-col"><h3>Quarter-finals · ${cfg.qfWindow}</h3>
-      <div class="slot"><div class="slot-head"><span>QF A</span><span>${q.aSeeds}</span></div><div class="slot-team">#${q.aNums[0]} ${q.a[0].team}</div><div class="slot-team">#${q.aNums[1]} ${q.a[1].team}</div><div class="slot-note">${q.flipped?'Adjusted automatically under the repeat-pairing rule.':'Provisional pairing if the groups ended today.'}</div></div>
-      <div class="slot"><div class="slot-head"><span>QF B</span><span>${q.bSeeds}</span></div><div class="slot-team">#${q.bNums[0]} ${q.b[0].team}</div><div class="slot-team">#${q.bNums[1]} ${q.b[1].team}</div><div class="slot-note">${q.flipped?'Adjusted automatically under the repeat-pairing rule.':'Provisional pairing if the groups ended today.'}</div></div>
+      <div class="slot"><div class="slot-head"><span>QF A</span><span>${q.aSeeds}</span></div><div class="slot-team">#${q.aNums[0]} ${teamLabel(q.a[0].team)}</div><div class="slot-team">#${q.aNums[1]} ${teamLabel(q.a[1].team)}</div><div class="slot-note">${q.flipped?'Adjusted automatically under the repeat-pairing rule.':'Provisional pairing if the groups ended today.'}</div></div>
+      <div class="slot"><div class="slot-head"><span>QF B</span><span>${q.bSeeds}</span></div><div class="slot-team">#${q.bNums[0]} ${teamLabel(q.b[0].team)}</div><div class="slot-team">#${q.bNums[1]} ${teamLabel(q.b[1].team)}</div><div class="slot-note">${q.flipped?'Adjusted automatically under the repeat-pairing rule.':'Provisional pairing if the groups ended today.'}</div></div>
       ${ruleBox}${qfC}
-      <div class="slot relegation"><div class="slot-head"><span>Relegation</span><span>${cfg.qfWindow}</span></div><div class="slot-team">${bottoms[0].team}</div><div class="slot-team">${relSecond}</div><div class="slot-note">Current lowest group-bottom teams, ranked only by championship points then scoring difference.${rel.boundaryTie?' <span class="unresolved">The second relegation place is unresolved because the next two teams are level on both published criteria.</span>':''}</div></div>
+      <div class="slot relegation"><div class="slot-head"><span>Relegation</span><span>${cfg.qfWindow}</span></div><div class="slot-team">${teamLabel(bottoms[0].team)}</div><div class="slot-team">${relSecond}</div><div class="slot-note">Current lowest group-bottom teams, ranked only by championship points then scoring difference.${rel.boundaryTie?' <span class="unresolved">The second relegation place is unresolved because the next two teams are level on both published criteria.</span>':''}</div></div>
     </div>
     <div class="round-col"><h3>Semi-finals · 2–11 Oct</h3>${sf1}${sf2}<div class="rule-alert"><div class="rule-kicker">Semi-final rule</div><div class="rule-text">The competition regulations require repeat group pairings to be avoided, with the semi-final pairings adjusted where necessary.</div></div></div>
     <div class="round-col"><h3>County final · October</h3><div class="slot"><div class="slot-head"><span>${cfg.cup}</span><span>TBC</span></div><div class="slot-team">Winner Semi-final 1</div><div class="slot-team">Winner Semi-final 2</div><div class="slot-note">County final window remains provisional in the Master Fixture Plan.</div></div></div>`;
