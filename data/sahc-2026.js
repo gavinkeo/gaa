@@ -7,6 +7,8 @@ window.CHAMP_DATA = {
   format: 'seniorA',
   nextLine: 'Group stage complete · Quarter-finals 18–20 Sept',
   qfWindow: '18–20 Sept',
+  sfDate: '4 Oct',
+  finalDate: '18 Oct',
   updated: '6 September 2026',
   resultsSource: 'https://en.wikipedia.org/wiki/2026_Cork_Senior_A_Hurling_Championship',
   rulesSource: 'https://gaacork.ie/competitions-document-2026/',

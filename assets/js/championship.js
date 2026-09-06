@@ -4,7 +4,8 @@ const STORAGE_KEY = `corkgaa-${cfg.code.toLowerCase()}-2026-entered-scores`;
 
 games.forEach((m,i)=>{
   m._id = `g${i}`;
-  m._editable = m.status !== 'result';
+  m._published = m.status === 'result';
+  m._editable = !m._published;
 });
 
 function scoreVal(s){
@@ -26,6 +27,8 @@ function currentProjectionNote(){
   return incompleteEarlierGame?cfg.projectionNote:'';
 }
 function manualResultCount(){ return games.filter(m=>m._editable&&m.status==='result').length; }
+function groupStageComplete(){ return games.every(m=>m.status==='result'); }
+function publishedGroupStageComplete(){ return games.every(m=>m._published); }
 
 function loadEnteredScores(){
   let saved={};
@@ -188,10 +191,28 @@ function renderSeeds(){
   const byeCount=cfg.format==='seniorA'?2:1;
   el.innerHTML=s.map((r,i)=>`<div class="seed-row"><div class="rank">${i+1}</div><div class="seed-team">${teamLabel(r.team)}</div><div class="seed-role">${i<3?'group winner':'runner-up'} · ${r.pts} pts · ${r.diff>=0?'+':''}${r.diff}</div><div class="${i<byeCount?'bye':''}">${i<byeCount?'SF BYE':''}</div></div>`).join('');
   const meta=document.getElementById('seedMeta');
-  if(meta){
-    const manual=manualResultCount(),note=currentProjectionNote();
-    meta.textContent=manual?`after ${manual} entered result${manual===1?'':'s'}`:(note?'live projection · incomplete group schedule':'live projection');
+  const title=document.querySelector('.mini-title strong');
+  const manual=manualResultCount(),note=currentProjectionNote();
+  if(publishedGroupStageComplete()){
+    if(title) title.textContent='Final seed order';
+    if(meta) meta.textContent='group stage complete';
+  }else if(groupStageComplete()){
+    if(title) title.textContent='Scenario seed order';
+    if(meta) meta.textContent='based on entered scores';
+  }else{
+    if(title) title.textContent='Live seed picture';
+    if(meta) meta.textContent=manual?`after ${manual} entered result${manual===1?'':'s'}`:(note?'live projection · incomplete group schedule':'live projection');
   }
+}
+
+function renderContextLabels(){
+  const p=document.querySelector('#knockout .section-head p');
+  if(!p) return;
+  const route=cfg.format==='seniorA'
+    ? 'Cork GAA’s official 1–6 ranking, two semi-final byes and automatic 3 v 6 repeat-pairing switch.'
+    : `Cork GAA’s official 1–6 ranking, automatic repeat-pairing switch${cfg.format==='premier'?' and the Divisions / Colleges route':''}.`;
+  if(publishedGroupStageComplete()) p.textContent=`Final group-stage seed order and knockout route using ${route}`;
+  else if(groupStageComplete()) p.textContent=`Entered-score scenario using ${route}`;
 }
 
 function premierProjection(s){
@@ -209,12 +230,28 @@ function qfProjection(s){return cfg.format==='seniorA'?seniorAProjection(s):prem
 
 function flipWatch(s,q){
   const note=currentProjectionNote();
+  const publishedComplete=publishedGroupStageComplete();
+  const complete=groupStageComplete();
   if(q.flipped){
     const repeats=[];
     if(cfg.format==='seniorA')repeats.push(pairingLabel(s[2].team,s[5].team));
     else{if(q.repeatA)repeats.push(pairingLabel(s[1].team,s[4].team));if(q.repeatB)repeats.push(pairingLabel(s[2].team,s[3].team));}
     const normal=cfg.format==='seniorA'?'3 v 6 and 4 v 5':'2 v 5 and 3 v 4';
+    if(publishedComplete){
+      return `<div class="rule-alert active"><div class="rule-kicker">QF flip now applies <span class="rule-pill active">Official rule</span></div><div class="rule-text"><strong>${repeats.join(' and ')}</strong> is a repeat of a group-stage fixture. Cork’s regulations therefore switch the club quarter-finals from ${normal} to <strong>${q.aNums[0]} v ${q.aNums[1]}</strong> and <strong>${q.bNums[0]} v ${q.bNums[1]}</strong>: <strong>${pairingLabel(q.a[0].team,q.a[1].team)}</strong> and <strong>${pairingLabel(q.b[0].team,q.b[1].team)}</strong>. <span class="resolved">The group stage is complete, so these pairings are now determined by the final seed order and the repeat-pairing rule.</span></div></div>`;
+    }
+    if(complete){
+      return `<div class="rule-alert active"><div class="rule-kicker">Entered-score scenario triggers QF flip <span class="rule-pill active">Official rule</span></div><div class="rule-text"><strong>${repeats.join(' and ')}</strong> would repeat a group-stage fixture. Under the entered scores, Cork’s regulations therefore switch the club quarter-finals from ${normal} to <strong>${q.aNums[0]} v ${q.aNums[1]}</strong> and <strong>${q.bNums[0]} v ${q.bNums[1]}</strong>: <strong>${pairingLabel(q.a[0].team,q.a[1].team)}</strong> and <strong>${pairingLabel(q.b[0].team,q.b[1].team)}</strong>. <span class="unresolved">This is a calculator scenario until those entered scores are published results.</span></div></div>`;
+    }
     return `<div class="rule-alert active"><div class="rule-kicker">Current projection triggers QF flip <span class="rule-pill active">Official rule</span></div><div class="rule-text"><strong>${repeats.join(' and ')}</strong> would repeat a group-stage fixture. Cork’s regulations therefore flip the projected club quarter-finals from ${normal} to <strong>${q.aNums[0]} v ${q.aNums[1]}</strong> and <strong>${q.bNums[0]} v ${q.bNums[1]}</strong>: <strong>${pairingLabel(q.a[0].team,q.a[1].team)}</strong> and <strong>${pairingLabel(q.b[0].team,q.b[1].team)}</strong>. <span class="unresolved">These are projections only; remaining group games can change the seed order and remove or create the flip.</span></div>${note?`<div class="scenario"><strong>Extra volatility:</strong> ${note}</div>`:''}</div>`;
+  }
+  if(publishedComplete){
+    const nominal=cfg.format==='seniorA'?'3 v 6 / 4 v 5':'2 v 5 / 3 v 4';
+    return `<div class="rule-alert"><div class="rule-kicker">No QF flip required <span class="rule-pill">Official rule</span></div><div class="rule-text">The final ${nominal} pairings do not recreate a group-stage fixture, so the normal quarter-final draw applies.</div></div>`;
+  }
+  if(complete){
+    const nominal=cfg.format==='seniorA'?'3 v 6 / 4 v 5':'2 v 5 / 3 v 4';
+    return `<div class="rule-alert"><div class="rule-kicker">No QF flip in this scenario <span class="rule-pill">Official rule</span></div><div class="rule-text">Under the entered scores, the ${nominal} pairings do not recreate a group-stage fixture.</div></div>`;
   }
   if(cfg.format==='seniorA'){
     const g3=teamGroup(s[2].team),sameRunner=s.find((r,i)=>i>=3&&teamGroup(r.team)===g3);
@@ -232,6 +269,11 @@ function relegationProjection(){
 
 function renderKnockout(){
   const s=liveSeeds(),q=qfProjection(s),rel=relegationProjection(),bottoms=rel.bottoms;
+  const publishedComplete=publishedGroupStageComplete(),complete=groupStageComplete();
+  const qfNote=q.flipped
+    ? (publishedComplete?'Final pairing after the repeat-pairing adjustment.':complete?'Scenario pairing after the repeat-pairing adjustment.':'Adjusted automatically under the repeat-pairing rule.')
+    : (publishedComplete?'Final pairing from the completed group stage.':complete?'Scenario pairing based on entered scores.':'Provisional pairing if the groups ended today.');
+  const relPrefix=publishedComplete?'Final':complete?'Scenario':'Current';
   const relSecond=rel.boundaryTie?`${teamLabel(bottoms[1].team)} <span class="pairing-v">/</span> ${teamLabel(bottoms[2].team)}`:teamLabel(bottoms[1].team);
   const ruleBox=flipWatch(s,q);
   const qfC=cfg.format==='premier'?`<div class="slot"><div class="slot-head"><span>QF C</span><span>6 v Div/Col</span></div><div class="slot-team">#6 ${teamLabel(s[5].team)}</div><div class="slot-team">${cfg.feeder?teamLabel(cfg.feeder):'Divisions / Colleges winner'}</div><div class="slot-note">${cfg.feederNote||'Divisions / Colleges qualifier enters the championship here.'}</div></div>`:'';
@@ -242,13 +284,13 @@ function renderKnockout(){
 
   document.getElementById('knockoutGrid').innerHTML=`
     <div class="round-col"><h3>Quarter-finals · ${cfg.qfWindow}</h3>
-      <div class="slot"><div class="slot-head"><span>QF A</span><span>${q.aSeeds}</span></div><div class="slot-team">#${q.aNums[0]} ${teamLabel(q.a[0].team)}</div><div class="slot-team">#${q.aNums[1]} ${teamLabel(q.a[1].team)}</div><div class="slot-note">${q.flipped?'Adjusted automatically under the repeat-pairing rule.':'Provisional pairing if the groups ended today.'}</div></div>
-      <div class="slot"><div class="slot-head"><span>QF B</span><span>${q.bSeeds}</span></div><div class="slot-team">#${q.bNums[0]} ${teamLabel(q.b[0].team)}</div><div class="slot-team">#${q.bNums[1]} ${teamLabel(q.b[1].team)}</div><div class="slot-note">${q.flipped?'Adjusted automatically under the repeat-pairing rule.':'Provisional pairing if the groups ended today.'}</div></div>
+      <div class="slot"><div class="slot-head"><span>QF A</span><span>${q.aSeeds}</span></div><div class="slot-team">#${q.aNums[0]} ${teamLabel(q.a[0].team)}</div><div class="slot-team">#${q.aNums[1]} ${teamLabel(q.a[1].team)}</div><div class="slot-note">${qfNote}</div></div>
+      <div class="slot"><div class="slot-head"><span>QF B</span><span>${q.bSeeds}</span></div><div class="slot-team">#${q.bNums[0]} ${teamLabel(q.b[0].team)}</div><div class="slot-team">#${q.bNums[1]} ${teamLabel(q.b[1].team)}</div><div class="slot-note">${qfNote}</div></div>
       ${ruleBox}${qfC}
-      <div class="slot relegation"><div class="slot-head"><span>Relegation</span><span>${cfg.qfWindow}</span></div><div class="slot-team">${teamLabel(bottoms[0].team)}</div><div class="slot-team">${relSecond}</div><div class="slot-note">Current lowest group-bottom teams, ranked only by championship points then scoring difference.${rel.boundaryTie?' <span class="unresolved">The second relegation place is unresolved because the next two teams are level on both published criteria.</span>':''}</div></div>
+      <div class="slot relegation"><div class="slot-head"><span>Relegation</span><span>${cfg.qfWindow}</span></div><div class="slot-team">${teamLabel(bottoms[0].team)}</div><div class="slot-team">${relSecond}</div><div class="slot-note">${relPrefix} lowest group-bottom teams, ranked only by championship points then scoring difference.${rel.boundaryTie?' <span class="unresolved">The second relegation place is unresolved because the next two teams are level on both published criteria.</span>':''}</div></div>
     </div>
-    <div class="round-col"><h3>Semi-finals · 2–11 Oct</h3>${sf1}${sf2}<div class="rule-alert"><div class="rule-kicker">Semi-final rule</div><div class="rule-text">The competition regulations require repeat group pairings to be avoided, with the semi-final pairings adjusted where necessary.</div></div></div>
-    <div class="round-col"><h3>County final · October</h3><div class="slot"><div class="slot-head"><span>${cfg.cup}</span><span>TBC</span></div><div class="slot-team">Winner Semi-final 1</div><div class="slot-team">Winner Semi-final 2</div><div class="slot-note">County final window remains provisional in the Master Fixture Plan.</div></div></div>`;
+    <div class="round-col"><h3>Semi-finals · ${cfg.sfDate}</h3>${sf1}${sf2}<div class="rule-alert"><div class="rule-kicker">Semi-final rule</div><div class="rule-text">The competition regulations require repeat group pairings to be avoided, with the semi-final pairings adjusted where necessary.</div></div></div>
+    <div class="round-col"><h3>County final · ${cfg.finalDate}</h3><div class="slot"><div class="slot-head"><span>${cfg.cup}</span><span>${cfg.finalDate}</span></div><div class="slot-team">Winner Semi-final 1</div><div class="slot-team">Winner Semi-final 2</div><div class="slot-note">County final.</div></div></div>`;
 }
 
 function bindTabs(){
@@ -257,5 +299,5 @@ function bindTabs(){
     document.querySelectorAll('.group-card').forEach(c=>c.classList.toggle('hide',b.dataset.g!=='all'&&c.dataset.group!==b.dataset.g));
   });
 }
-function renderAll(){renderGroups();ensureScoreActions();renderSeeds();renderKnockout();bindTabs();}
+function renderAll(){renderGroups();ensureScoreActions();renderContextLabels();renderSeeds();renderKnockout();bindTabs();}
 renderAll();

@@ -10,6 +10,8 @@ window.CHAMP_DATA = {
   feederNote: 'Imokilly won the Denis O’Riordan Cup and enter the PSHC at the quarter-final stage.',
   nextLine: 'Round 3 · Sun 6 Sept · 4:00pm · 6 fixtures',
   qfWindow: '18–20 Sept',
+  sfDate: '4 Oct',
+  finalDate: '18 Oct',
   updated: '6 September 2026',
   resultsSource: 'https://en.wikipedia.org/wiki/2026_Cork_Premier_Senior_Hurling_Championship',
   rulesSource: 'https://gaacork.ie/competitions-document-2026/',

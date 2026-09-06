@@ -29,3 +29,11 @@ When a score becomes official for everyone, edit the appropriate file under `dat
 
 ## Club colour markers
 Club primary colours are stored once in `assets/js/team-colours.js` and rendered beside team names across tables, fixtures, seedings and knockout projections.
+
+### Completed group stages
+The shared championship engine now switches its wording automatically when all published group games in a competition are complete: final seed order, rule-determined quarter-final pairings, and final relegation ranking replace live/provisional language.
+
+## 2026 knockout dates
+
+- PSHC / SAHC: quarter-finals 18–20 September, semi-finals 4 October, county finals 18 October.
+- PSFC / SAFC: quarter-finals 25–27 September, semi-finals 11 October, county finals 25 October.

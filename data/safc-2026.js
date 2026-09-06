@@ -7,6 +7,8 @@ window.CHAMP_DATA = {
   format: 'seniorA',
   nextLine: 'Postponed R2 · Sun 30 Aug · 3:00pm · Clyda Rovers v Éire Óg',
   qfWindow: '25–27 Sept',
+  sfDate: '11 Oct',
+  finalDate: '25 Oct',
   updated: '26 August 2026',
   projectionNote: 'Group 3 is one game behind: Clyda Rovers v Éire Óg is rescheduled for 30 August, so the live seed picture is especially provisional.',
   resultsSource: 'https://en.wikipedia.org/wiki/2026_Cork_Senior_A_Football_Championship',

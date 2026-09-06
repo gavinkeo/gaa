@@ -10,6 +10,8 @@ window.CHAMP_DATA = {
   feederNote: 'Carbery advanced from the Divisions / Colleges route after UCC conceded the preliminary quarter-final.',
   nextLine: 'Round 3 · Sun 13 Sept · 4:00pm · 6 fixtures',
   qfWindow: '25–27 Sept',
+  sfDate: '11 Oct',
+  finalDate: '25 Oct',
   updated: '26 August 2026',
   resultsSource: 'https://en.wikipedia.org/wiki/2026_Cork_Premier_Senior_Football_Championship',
   rulesSource: 'https://gaacork.ie/competitions-document-2026/',

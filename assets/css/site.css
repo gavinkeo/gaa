@@ -128,3 +128,5 @@ section{padding:34px 0}.section-head{display:flex;align-items:end;justify-conten
 .pairing-v{color:var(--muted);font-weight:700;padding:0 2px}
 .rule-text .team-label{display:inline-flex;max-width:none}
 @media(max-width:560px){.club-colours{font-size:.8em;letter-spacing:-2.5px}.team-label{gap:4px}}
+
+.resolved{color:#a7ddb5}
